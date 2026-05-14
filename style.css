@@ -1,11 +1,11 @@
-/* MotionLab — AI GSAP Studio */
+/* Jankless — AI GSAP Studio */
 
 :root {
   --bg:         #08080f;
   --panel-bg:   #0e0e18;
   --border:     #191928;
-  --accent:     #6366f1;
-  --accent-h:   #818cf8;
+  --accent:     #00e67a;
+  --accent-h:   #33ed93;
   --text:       #e2e8f0;
   --muted:      #4a5568;
   --muted-mid:  #64748b;
@@ -53,6 +53,13 @@ header {
   font-size: 15px;
   color: var(--text);
   letter-spacing: -0.2px;
+}
+
+.logo-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .badge {
@@ -390,7 +397,7 @@ main {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
   line-height: 1.75;
-  color: #a5b4fc;
+  color: #6effc0;
   white-space: pre-wrap;
   word-break: break-word;
   background: var(--code-bg);
