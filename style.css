@@ -418,15 +418,61 @@ main {
   font-size: 11.5px;
   line-height: 1.75;
   color: #6effc0;
-  white-space: pre-wrap;
+  white-space: pre;
   word-break: break-word;
   background: var(--code-bg);
   min-height: 0;
+  /* textarea resets */
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+  tab-size: 2;
 }
 
-.code-placeholder {
+.code-display::placeholder {
   color: var(--muted);
   font-style: italic;
+  white-space: pre-line;
+}
+
+.code-display:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ─── Code panel header actions ──────────────────── */
+
+.code-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-run {
+  background: rgba(0,230,122,0.08);
+  border: 1px solid rgba(0,230,122,0.25);
+  color: var(--accent);
+}
+
+.btn-run:hover {
+  background: rgba(0,230,122,0.15);
+  border-color: rgba(0,230,122,0.45);
+  color: var(--accent-h);
+}
+
+/* ─── Transport controls ──────────────────────────── */
+
+.btn-transport {
+  width: 100%;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.btn-transport.paused {
+  background: rgba(0,230,122,0.08);
+  border-color: rgba(0,230,122,0.3);
+  color: var(--accent);
 }
 
 /* ─── Scrollbars ──────────────────────────────────── */

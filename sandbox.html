@@ -127,6 +127,8 @@
   <script>
     const TARGETS = ['#heading', '#subtext', '#card', '.card-title', '.card-body', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage'];
 
+    let _timeScale = 1;
+
     function resetAll() {
       gsap.killTweensOf('*');
       TARGETS.forEach(sel => {
@@ -140,6 +142,8 @@
 
       if (e.data.type === 'RUN_ANIMATION') {
         resetAll();
+        gsap.globalTimeline.play();
+        gsap.globalTimeline.timeScale(_timeScale);
         try {
           // eslint-disable-next-line no-new-func
           const fn = new Function('gsap', e.data.code);
@@ -152,7 +156,22 @@
 
       if (e.data.type === 'RESET') {
         resetAll();
+        gsap.globalTimeline.play();
+        gsap.globalTimeline.timeScale(_timeScale);
         window.parent.postMessage({ type: 'RESET_OK' }, '*');
+      }
+
+      if (e.data.type === 'PAUSE') {
+        gsap.globalTimeline.pause();
+      }
+
+      if (e.data.type === 'PLAY') {
+        gsap.globalTimeline.play();
+      }
+
+      if (e.data.type === 'SET_TIMESCALE') {
+        _timeScale = e.data.value;
+        gsap.globalTimeline.timeScale(_timeScale);
       }
     });
   </script>

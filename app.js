@@ -1,5 +1,5 @@
 /**
- * MotionLab — AI GSAP Studio
+ * Jankless — AI GSAP Studio
  * app.js
  *
  * Calls Claude API → generates GSAP code → runs in sandboxed iframe
@@ -47,24 +47,29 @@ const SUGGESTIONS = [
 
 // ─── DOM refs ──────────────────────────────────────────────────────────────────
 
-const promptInput   = document.getElementById('prompt');
-const generateBtn   = document.getElementById('generate-btn');
-const codeDisplay   = document.getElementById('code-display');
-const statusEl      = document.getElementById('status');
-const canvasFrame   = document.getElementById('canvas-frame');
+const promptInput    = document.getElementById('prompt');
+const generateBtn    = document.getElementById('generate-btn');
+const codeDisplay    = document.getElementById('code-display');
+const statusEl       = document.getElementById('status');
+const canvasFrame    = document.getElementById('canvas-frame');
 const durationSlider = document.getElementById('duration');
-const durationVal   = document.getElementById('duration-val');
+const durationVal    = document.getElementById('duration-val');
 const staggerSlider  = document.getElementById('stagger');
-const staggerVal    = document.getElementById('stagger-val');
-const easeSelect    = document.getElementById('ease');
-const replayBtn     = document.getElementById('replay-btn');
-const resetBtn      = document.getElementById('reset-btn');
-const copyBtn       = document.getElementById('copy-btn');
+const staggerVal     = document.getElementById('stagger-val');
+const easeSelect     = document.getElementById('ease');
+const replayBtn      = document.getElementById('replay-btn');
+const resetBtn       = document.getElementById('reset-btn');
+const copyBtn        = document.getElementById('copy-btn');
+const runBtn         = document.getElementById('run-btn');
+const pauseBtn       = document.getElementById('pause-btn');
+const timescaleSlider = document.getElementById('timescale');
+const timescaleVal   = document.getElementById('timescale-val');
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 
 let currentCode  = '';
 let isGenerating = false;
+let isPaused     = false;
 
 // ─── Slider live updates ───────────────────────────────────────────────────────
 
@@ -74,6 +79,12 @@ durationSlider.addEventListener('input', () => {
 
 staggerSlider.addEventListener('input', () => {
   staggerVal.textContent = parseFloat(staggerSlider.value).toFixed(2) + 's';
+});
+
+timescaleSlider.addEventListener('input', () => {
+  const val = parseFloat(timescaleSlider.value).toFixed(1);
+  timescaleVal.textContent = val + '×';
+  canvasFrame.contentWindow.postMessage({ type: 'SET_TIMESCALE', value: parseFloat(val) }, '*');
 });
 
 // ─── Suggestions ──────────────────────────────────────────────────────────────
@@ -105,8 +116,9 @@ async function generateAnimation() {
   isGenerating = true;
   generateBtn.disabled = true;
   generateBtn.classList.add('generating');
+  codeDisplay.disabled = true;
   setStatus('Generating animation…', 'loading');
-  codeDisplay.innerHTML = '<span class="code-placeholder">// Thinking…</span>';
+  codeDisplay.value = '// Thinking…';
 
   const duration = parseFloat(durationSlider.value).toFixed(1);
   const ease     = easeSelect.value;
@@ -125,21 +137,22 @@ async function generateAnimation() {
       throw new Error(data.error || `Server error ${response.status}`);
     }
 
-    let code = data.code || '';
-
+    const code = data.code || '';
     currentCode = code;
     displayCode(code);
     runAnimation(code);
+    resetPauseState();
     setStatus('✓ Animation ready', 'success');
 
   } catch (err) {
     setStatus('✗ ' + err.message, 'error');
-    codeDisplay.innerHTML = '<span class="code-placeholder">// Error — check console for details</span>';
-    console.error('[MotionLab]', err);
+    codeDisplay.value = '// Error — check console for details';
+    console.error('[Jankless]', err);
   } finally {
     isGenerating = false;
     generateBtn.disabled = false;
     generateBtn.classList.remove('generating');
+    codeDisplay.disabled = false;
   }
 }
 
@@ -156,7 +169,7 @@ function resetCanvas() {
 window.addEventListener('message', e => {
   if (e.data.type === 'ANIMATION_ERROR') {
     setStatus('✗ Runtime error: ' + e.data.error, 'error');
-    console.error('[MotionLab sandbox]', e.data.error);
+    console.error('[Jankless sandbox]', e.data.error);
   }
 });
 
@@ -171,27 +184,57 @@ promptInput.addEventListener('keydown', e => {
   }
 });
 
+// Run button — executes whatever's currently in the code editor
+runBtn.addEventListener('click', () => {
+  const code = codeDisplay.value.trim();
+  if (!code) return;
+  currentCode = code;
+  runAnimation(code);
+  resetPauseState();
+  setStatus('▶ Running…', 'loading');
+  setTimeout(() => setStatus('✓ Animation ready', 'success'), 600);
+});
+
+// Replay button — same as Run (respects edits)
 replayBtn.addEventListener('click', () => {
-  if (!currentCode) return;
-  runAnimation(currentCode);
+  const code = codeDisplay.value.trim();
+  if (!code) return;
+  runAnimation(code);
+  resetPauseState();
   setStatus('↺ Replaying…', 'loading');
   setTimeout(() => setStatus('✓ Animation ready', 'success'), 600);
 });
 
+// Pause / Play toggle
+pauseBtn.addEventListener('click', () => {
+  isPaused = !isPaused;
+  if (isPaused) {
+    canvasFrame.contentWindow.postMessage({ type: 'PAUSE' }, '*');
+    pauseBtn.textContent = '▶ Play';
+    pauseBtn.classList.add('paused');
+  } else {
+    canvasFrame.contentWindow.postMessage({ type: 'PLAY' }, '*');
+    pauseBtn.textContent = '⏸ Pause';
+    pauseBtn.classList.remove('paused');
+  }
+});
+
 resetBtn.addEventListener('click', () => {
   resetCanvas();
+  resetPauseState();
   setStatus('Canvas reset.', '');
 });
 
 copyBtn.addEventListener('click', () => {
-  if (!currentCode) return;
-  navigator.clipboard.writeText(currentCode).then(() => {
+  const code = codeDisplay.value.trim();
+  if (!code) return;
+  navigator.clipboard.writeText(code).then(() => {
     setStatus('✓ Copied to clipboard!', 'success');
     setTimeout(() => setStatus('✓ Animation ready', 'success'), 1800);
   }).catch(() => {
     // Fallback for browsers without clipboard API
     const ta = document.createElement('textarea');
-    ta.value = currentCode;
+    ta.value = code;
     document.body.appendChild(ta);
     ta.select();
     document.execCommand('copy');
@@ -203,7 +246,13 @@ copyBtn.addEventListener('click', () => {
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function displayCode(code) {
-  codeDisplay.textContent = code;
+  codeDisplay.value = code;
+}
+
+function resetPauseState() {
+  isPaused = false;
+  pauseBtn.textContent = '⏸ Pause';
+  pauseBtn.classList.remove('paused');
 }
 
 function setStatus(msg, type = '') {
