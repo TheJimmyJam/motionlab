@@ -18,6 +18,7 @@
       min-height: 100vh;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
+      transition: background 0.2s;
     }
 
     /* Subtle grid background */
@@ -30,6 +31,41 @@
         linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
+      transition: background-image 0.2s;
+    }
+
+    /* ─── Light mode ──────────────────────────────── */
+
+    body[data-theme="light"] {
+      background: #f0f4f8;
+    }
+
+    body[data-theme="light"]::before {
+      background-image:
+        linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+    }
+
+    body[data-theme="light"] #heading {
+      color: #1a202c;
+    }
+
+    body[data-theme="light"] #subtext {
+      color: #64748b;
+    }
+
+    body[data-theme="light"] #card {
+      background: #ffffff;
+      border-color: #dde3ec;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    body[data-theme="light"] .card-title {
+      color: #1a202c;
+    }
+
+    body[data-theme="light"] .card-body {
+      color: #64748b;
     }
 
     #stage {
@@ -172,6 +208,10 @@
       if (e.data.type === 'SET_TIMESCALE') {
         _timeScale = e.data.value;
         gsap.globalTimeline.timeScale(_timeScale);
+      }
+
+      if (e.data.type === 'SET_THEME') {
+        document.body.setAttribute('data-theme', e.data.theme);
       }
     });
   </script>

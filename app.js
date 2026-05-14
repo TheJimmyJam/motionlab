@@ -64,12 +64,39 @@ const runBtn         = document.getElementById('run-btn');
 const pauseBtn       = document.getElementById('pause-btn');
 const timescaleSlider = document.getElementById('timescale');
 const timescaleVal   = document.getElementById('timescale-val');
+const themeBtn       = document.getElementById('theme-btn');
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 
 let currentCode  = '';
 let isGenerating = false;
 let isPaused     = false;
+
+// ─── Theme ─────────────────────────────────────────────────────────────────────
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('jankless-theme', theme);
+  // Sync the canvas iframe
+  try {
+    canvasFrame.contentWindow.postMessage({ type: 'SET_THEME', theme }, '*');
+  } catch (_) {}
+}
+
+// Send theme to iframe once it loads
+canvasFrame.addEventListener('load', () => {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  canvasFrame.contentWindow.postMessage({ type: 'SET_THEME', theme }, '*');
+});
+
+// Init from saved preference (default: dark)
+applyTheme(localStorage.getItem('jankless-theme') || 'dark');
+
+themeBtn.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
 
 // ─── Slider live updates ───────────────────────────────────────────────────────
 

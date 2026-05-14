@@ -13,8 +13,27 @@
   --error:      #ef4444;
   --warning:    #f59e0b;
   --code-bg:    #09090f;
+  --code-color: #6effc0;
   --radius:     8px;
   --radius-lg:  12px;
+}
+
+/* ─── Light mode overrides ────────────────────────── */
+
+[data-theme="light"] {
+  --bg:         #f0f4f8;
+  --panel-bg:   #ffffff;
+  --border:     #dde3ec;
+  --accent:     #00a852;
+  --accent-h:   #00c462;
+  --text:       #1a202c;
+  --muted:      #b0bec5;
+  --muted-mid:  #64748b;
+  --success:    #16a34a;
+  --error:      #dc2626;
+  --warning:    #d97706;
+  --code-bg:    #f1f5f9;
+  --code-color: #166534;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -417,7 +436,7 @@ main {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
   line-height: 1.75;
-  color: #6effc0;
+  color: var(--code-color);
   white-space: pre;
   word-break: break-word;
   background: var(--code-bg);
@@ -473,6 +492,73 @@ main {
   background: rgba(0,230,122,0.08);
   border-color: rgba(0,230,122,0.3);
   color: var(--accent);
+}
+
+/* ─── Theme toggle button ─────────────────────────── */
+
+.btn-theme {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted-mid);
+  padding: 5px 9px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-theme:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+}
+
+[data-theme="light"] .btn-theme:hover {
+  border-color: rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.04);
+}
+
+/* ─── Light mode component overrides ─────────────── */
+
+[data-theme="light"] .badge {
+  background: rgba(0,168,82,0.08);
+  color: #166534;
+  border-color: rgba(0,168,82,0.2);
+}
+
+[data-theme="light"] .suggestion-chip {
+  background: #f8fafc;
+  color: #475569;
+}
+
+[data-theme="light"] .suggestion-chip:hover {
+  background: rgba(0,168,82,0.06);
+  border-color: rgba(0,168,82,0.3);
+  color: var(--text);
+}
+
+[data-theme="light"] .btn-run {
+  background: rgba(0,168,82,0.08);
+  border-color: rgba(0,168,82,0.25);
+}
+
+[data-theme="light"] .btn-run:hover {
+  background: rgba(0,168,82,0.14);
+  border-color: rgba(0,168,82,0.4);
+}
+
+[data-theme="light"] .btn-transport.paused {
+  background: rgba(0,168,82,0.08);
+  border-color: rgba(0,168,82,0.3);
+}
+
+[data-theme="light"] .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(0,168,82,0.25);
+}
+
+[data-theme="light"] header {
+  box-shadow: 0 1px 0 var(--border);
 }
 
 /* ─── Scrollbars ──────────────────────────────────── */
