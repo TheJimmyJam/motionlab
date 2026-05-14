@@ -72,6 +72,43 @@ let currentCode  = '';
 let isGenerating = false;
 let isPaused     = false;
 
+// ─── Mobile tabs ───────────────────────────────────────────────────────────────
+
+const mobileTabs = document.querySelectorAll('.mobile-tab');
+const mobilePanels = {
+  create:  document.querySelector('.panel-left'),
+  preview: document.querySelector('.panel-center'),
+  tweak:   document.querySelector('.panel-right'),
+};
+
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+function switchTab(tabName) {
+  Object.values(mobilePanels).forEach(p => p && p.classList.remove('mobile-active'));
+  mobileTabs.forEach(t => t.classList.remove('active'));
+  if (mobilePanels[tabName]) mobilePanels[tabName].classList.add('mobile-active');
+  const btn = document.querySelector(`.mobile-tab[data-tab="${tabName}"]`);
+  if (btn) btn.classList.add('active');
+}
+
+mobileTabs.forEach(tab => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+
+// Init mobile default tab
+if (isMobile()) switchTab('create');
+
+// Handle orientation / resize changes
+window.addEventListener('resize', () => {
+  if (!isMobile()) {
+    Object.values(mobilePanels).forEach(p => p && p.classList.remove('mobile-active'));
+  } else if (!document.querySelector('.mobile-tab.active')) {
+    switchTab('create');
+  }
+});
+
 // ─── Theme ─────────────────────────────────────────────────────────────────────
 
 function applyTheme(theme) {
@@ -170,6 +207,7 @@ async function generateAnimation() {
     runAnimation(code);
     resetPauseState();
     setStatus('✓ Animation ready', 'success');
+    if (isMobile()) switchTab('preview');
 
   } catch (err) {
     setStatus('✗ ' + err.message, 'error');

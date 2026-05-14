@@ -570,3 +570,152 @@ main {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ─── Mobile tab bar (desktop: hidden) ───────────── */
+
+.mobile-tabs { display: none; }
+
+/* ─── Mobile layout ───────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  html, body {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  /* Shrink header a touch */
+  header {
+    padding: 0 12px;
+    height: 44px;
+  }
+
+  /* Hide badge — too long on mobile */
+  .badge { display: none; }
+
+  /* Main becomes a full-screen tab container */
+  main {
+    display: block;
+    position: relative;
+    height: calc(100vh - 44px - 56px);
+    height: calc(100dvh - 44px - 56px); /* dynamic viewport (iOS Safari) */
+    overflow: hidden;
+  }
+
+  /* All panels sit on top of each other, only one visible at a time */
+  .panel {
+    position: absolute;
+    inset: 0;
+    display: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .panel.mobile-active {
+    display: flex;
+  }
+
+  /* Remove side borders on mobile */
+  .panel-left  { border-right: none; }
+  .panel-right { border-left: none; }
+
+  /* Canvas panel — keep column direction, iframe fills space */
+  .panel-center { flex-direction: column; }
+  .canvas-frame { flex: 1; min-height: 0; }
+
+  /* Right panel: stack controls above code, both visible + scrollable */
+  .panel-right {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .right-controls { flex-shrink: 0; }
+
+  .right-code {
+    flex: 1;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Prevent iOS from zooming on input focus */
+  .prompt-input,
+  .code-display,
+  .select {
+    font-size: 16px;
+  }
+
+  /* Code display max-height so both sections visible without scrolling too far */
+  .code-display {
+    min-height: 200px;
+  }
+
+  /* Generate button — full width already, just a bit more padding */
+  .btn-primary { padding: 12px 16px; }
+
+  /* Suggestions — more comfortable tap targets */
+  .suggestion-chip { padding: 8px 12px; font-size: 13px; }
+
+  /* Status bar sticks to bottom of Create panel */
+  .status-bar { margin-top: auto; }
+
+  /* ─── Mobile tab bar ──── */
+
+  .mobile-tabs {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--muted-mid);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s;
+    padding: 6px 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-tab svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .mobile-tab.active { color: var(--accent); }
+
+  /* Active tab indicator line */
+  .mobile-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 24px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 0 0 2px 2px;
+  }
+
+  .mobile-tab { position: relative; }
+
+  /* Controls body — give breathing room */
+  .controls-body { padding: 16px; }
+
+  /* Panel sections — full width */
+  .panel-section { padding: 16px; }
+}

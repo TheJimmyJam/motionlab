@@ -171,6 +171,32 @@
     </aside>
   </main>
 
+  <!-- Mobile tab bar (hidden on desktop via CSS) -->
+  <nav class="mobile-tabs">
+    <button class="mobile-tab active" data-tab="create">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13.586 3.586a2 2 0 1 1 2.828 2.828l-8.5 8.5A2 2 0 0 1 6.5 15.5H5a1 1 0 0 1-1-1v-1.5a2 2 0 0 1 .586-1.414l8.5-8.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Create
+    </button>
+    <button class="mobile-tab" data-tab="preview">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.5 5.5 14 10l-7.5 4.5V5.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Preview
+    </button>
+    <button class="mobile-tab" data-tab="tweak">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 6h12M4 10h7M4 14h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="14" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="9" cy="10" r="2" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="12" cy="14" r="2" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Tweak
+    </button>
+  </nav>
+
   <script src="app.js"></script>
 </body>
 </html>
