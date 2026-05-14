@@ -130,7 +130,10 @@ main {
 }
 
 .suggestions-section {
-  flex-shrink: 0;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-bar {
@@ -255,8 +258,9 @@ main {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  max-height: 170px;
+  flex: 1;
   overflow-y: auto;
+  padding-bottom: 8px;
 }
 
 .suggestion-chip {

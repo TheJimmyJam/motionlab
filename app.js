@@ -14,16 +14,35 @@ const API_ENDPOINT = '/api/generate';
 // ─── Quick-start suggestions ───────────────────────────────────────────────────
 
 const SUGGESTIONS = [
+  // Entrances
   'Bounce the boxes in from below with stagger',
-  'Make the circle pulse like a heartbeat',
   'Slide the card in from the right with a spring',
   'Fade everything in one by one, top to bottom',
-  'Make everything spin and scale dramatically',
+  'Drop the heading in from above with a bounce',
+  'Scale everything up from zero with elastic ease',
+  'Fly the boxes in from the left, one by one',
+
+  // Attention & loops
+  'Make the circle pulse like a heartbeat',
   'Shake the heading like a glitch effect',
-  'Stagger boxes from left with elastic easing',
-  'Make the card flip and pop into place',
-  'Animate a wave through the boxes',
-  'Create a snappy entrance for the whole stage',
+  'Make the card breathe in and out on loop',
+  'Spin the circle continuously like a loader',
+  'Make the boxes float up and down in a wave',
+  'Flash the heading like a neon sign flickering',
+
+  // Sequences & combos
+  'Animate a wave ripple through the boxes',
+  'Stagger the boxes in, then pulse the circle',
+  'Slide the card in, then cascade the boxes below it',
+  'Make everything spin and scale in dramatically',
+  'Entrance the whole stage like a cinematic reveal',
+  'Stagger all elements in with back.out easing',
+
+  // Exits & transitions
+  'Make the boxes explode outward then snap back',
+  'Collapse everything to the center then expand',
+  'Scatter the boxes randomly then snap into place',
+  'Make the card wobble like it was just dropped',
 ];
 
 // ─── DOM refs ──────────────────────────────────────────────────────────────────
