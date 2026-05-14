@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MotionLab — AI GSAP Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="11" fill="#6366f1"/>
+        <path d="M7 11.5L10 14.5L15 8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      MotionLab
+    </div>
+    <div class="header-right">
+      <span class="badge">AI GSAP Studio · Beta</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: Controls -->
+    <aside class="panel panel-left">
+
+      <div class="panel-section">
+        <label class="panel-label">Describe your animation</label>
+        <textarea
+          id="prompt"
+          class="prompt-input"
+          placeholder="e.g. Bounce the boxes in from below with stagger, then pulse the circle…"
+          rows="4"
+        ></textarea>
+        <button id="generate-btn" class="btn btn-primary">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 1L7.9 5H12L8.6 7.4 9.9 11.5 6.5 9 3.1 11.5 4.4 7.4 1 5H5.1L6.5 1Z" fill="currentColor"/>
+          </svg>
+          Generate Animation
+          <span class="kbd">⌘↵</span>
+        </button>
+      </div>
+
+      <div class="panel-section suggestions-section">
+        <label class="panel-label">Quick starts</label>
+        <div id="suggestions" class="suggestions"></div>
+      </div>
+
+      <div class="panel-section controls-section">
+        <label class="panel-label">Controls</label>
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">Duration</span>
+            <span class="control-value" id="duration-val">0.6s</span>
+          </div>
+          <input type="range" id="duration" class="slider" min="0.1" max="3" step="0.1" value="0.6">
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">Ease</span>
+          </div>
+          <select id="ease" class="select">
+            <option value="power2.out">power2.out</option>
+            <option value="power3.out">power3.out</option>
+            <option value="expo.out">expo.out</option>
+            <option value="elastic.out(1,0.3)">elastic.out</option>
+            <option value="back.out(1.7)">back.out</option>
+            <option value="bounce.out">bounce.out</option>
+            <option value="sine.inOut">sine.inOut</option>
+            <option value="linear">linear</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">Stagger</span>
+            <span class="control-value" id="stagger-val">0.10s</span>
+          </div>
+          <input type="range" id="stagger" class="slider" min="0" max="0.5" step="0.05" value="0.1">
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div id="status" class="status"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: Canvas -->
+    <div class="panel panel-center">
+      <div class="canvas-header">
+        <span class="canvas-label">Preview</span>
+        <div class="canvas-controls">
+          <button id="replay-btn" class="btn btn-sm">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <path d="M2 5.5A3.5 3.5 0 1 0 5.5 2V0L2.5 2.5 5.5 5V3A2.5 2.5 0 1 1 3 5.5H2Z" fill="currentColor"/>
+            </svg>
+            Replay
+          </button>
+          <button id="reset-btn" class="btn btn-sm">Reset</button>
+        </div>
+      </div>
+      <iframe
+        id="canvas-frame"
+        src="sandbox.html"
+        sandbox="allow-scripts allow-same-origin"
+        class="canvas-frame"
+        title="Animation Preview"
+      ></iframe>
+    </div>
+
+    <!-- RIGHT: Code -->
+    <aside class="panel panel-right">
+      <div class="panel-header">
+        <span class="panel-label">Generated Code</span>
+        <button id="copy-btn" class="btn btn-sm">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M1 8V1.5A.5.5 0 0 1 1.5 1H8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Copy
+        </button>
+      </div>
+      <pre id="code-display" class="code-display"><span class="code-placeholder">// Your GSAP code will appear here
+// after you generate an animation
+//
+// Example output:
+// const tl = gsap.timeline();
+// tl.from("#box1", { y: 60, opacity: 0, duration: 0.6 })
+//   .from("#box2", { y: 60, opacity: 0, duration: 0.6 }, "-=0.4");</span></pre>
+    </aside>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
