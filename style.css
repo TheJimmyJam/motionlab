@@ -100,6 +100,27 @@ main {
   border-left: 1px solid var(--border);
 }
 
+/* ─── Right panel split ────────────────────────────── */
+
+.right-controls {
+  flex-shrink: 0;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.controls-body {
+  padding: 14px 16px 6px;
+  overflow-y: auto;
+}
+
+.right-code {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* ─── Panel Sections ──────────────────────────────── */
 
 .panel-section {
@@ -110,11 +131,6 @@ main {
 
 .suggestions-section {
   flex-shrink: 0;
-}
-
-.controls-section {
-  flex: 1;
-  overflow-y: auto;
 }
 
 .status-bar {
