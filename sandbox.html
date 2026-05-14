@@ -60,13 +60,11 @@
       box-shadow: 0 4px 24px rgba(0,0,0,0.07);
     }
 
-    body[data-theme="light"] .card-title {
-      color: #1a202c;
-    }
-
-    body[data-theme="light"] .card-body {
-      color: #64748b;
-    }
+    body[data-theme="light"] .card-label { color: #94a3b8; }
+    body[data-theme="light"] .card-metric { color: #1a202c; }
+    body[data-theme="light"] .card-sub { color: #94a3b8; }
+    body[data-theme="light"] .card-bar { background: rgba(99,102,241,0.15); }
+    body[data-theme="light"] .card-bar.active { background: #6366f1; }
 
     #stage {
       display: flex;
@@ -100,21 +98,66 @@
       background: #111120;
       border: 1px solid #1e1e32;
       border-radius: 16px;
-      padding: 22px 20px;
+      padding: 20px;
       box-shadow: 0 4px 32px rgba(0,0,0,0.4);
     }
 
-    .card-title {
-      color: #e2e8f0;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 7px;
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
     }
 
-    .card-body {
+    .card-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #64748b;
+    }
+
+    .card-badge {
+      background: rgba(0,230,122,0.12);
+      color: #00e67a;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .card-metric {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .card-sub {
+      font-size: 11px;
       color: #4a5568;
-      font-size: 12px;
-      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .card-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 36px;
+    }
+
+    .card-bar {
+      flex: 1;
+      background: rgba(99,102,241,0.2);
+      border-radius: 3px 3px 0 0;
+      min-height: 4px;
+    }
+
+    .card-bar.active {
+      background: #6366f1;
     }
 
     #boxes {
@@ -153,8 +196,21 @@
     <div id="heading">Jankless</div>
     <div id="subtext">Beautiful GSAP animations, zero jank.</div>
     <div id="card">
-      <div class="card-title">Preview Card</div>
-      <div class="card-body">Describe an animation above and watch it come to life.</div>
+      <div class="card-header">
+        <span class="card-label">Monthly Revenue</span>
+        <span class="card-badge">↑ 12.4%</span>
+      </div>
+      <div class="card-metric">$24,391</div>
+      <div class="card-sub">vs $21,680 last month</div>
+      <div class="card-bars">
+        <div class="card-bar" style="height:38%"></div>
+        <div class="card-bar" style="height:52%"></div>
+        <div class="card-bar" style="height:44%"></div>
+        <div class="card-bar" style="height:68%"></div>
+        <div class="card-bar" style="height:57%"></div>
+        <div class="card-bar" style="height:82%"></div>
+        <div class="card-bar active" style="height:100%"></div>
+      </div>
     </div>
     <div id="boxes">
       <div class="box" id="box1"></div>
@@ -166,7 +222,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script>
-    const TARGETS = ['#heading', '#subtext', '#card', '.card-title', '.card-body', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage'];
+    const TARGETS = ['#heading', '#subtext', '#card', '.card-header', '.card-label', '.card-badge', '.card-metric', '.card-sub', '.card-bars', '.card-bar', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage'];
 
     let _timeScale = 1;
 

@@ -9,10 +9,16 @@
 const SYSTEM_PROMPT = `You are the animation engine inside MotionLab, an AI GSAP studio. Your ONLY job is to output valid JavaScript that animates elements on a web canvas using GSAP 3.
 
 AVAILABLE DOM ELEMENTS (already in the page, use their exact IDs/classes):
-  #heading    — large text: "MotionLab"
-  #subtext    — subtitle text below heading
-  #card       — rounded card (240px wide); contains .card-title and .card-body
-  #boxes      — flex row containing three boxes
+  #heading      — large text: "Jankless"
+  #subtext      — subtitle text below heading
+  #card         — dashboard stat card (240px wide); contains:
+    .card-header  — top row with label + badge
+    .card-label   — "Monthly Revenue" label (small caps)
+    .card-badge   — green "↑ 12.4%" pill badge
+    .card-metric  — large "$24,391" number
+    .card-sub     — "vs $21,680 last month" subtext
+    .card-bars    — mini bar chart row; each bar is .card-bar (last one is .active)
+  #boxes        — flex row containing three boxes
   #box1       — indigo box (72×72px, border-radius 14px)
   #box2       — purple box (72×72px, border-radius 14px)
   #box3       — violet box (72×72px, border-radius 14px)
