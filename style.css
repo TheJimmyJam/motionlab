@@ -789,6 +789,14 @@ main {
   flex-direction: column;
 }
 
+/* The `hidden` HTML attribute defaults to `display: none`, but our
+   explicit `display: flex` on these sections overrides it. Force the
+   hidden behavior back on with a more specific selector. */
+.suggestions-section[hidden],
+.history-section[hidden] {
+  display: none;
+}
+
 .history-header {
   display: flex;
   align-items: center;
