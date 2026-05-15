@@ -75,27 +75,49 @@ exports.handler = async function (event) {
     `  ease: ${ease}\n` +
     `  stagger (if multiple elements): ${stagger}s`;
 
+  const requestBody = JSON.stringify({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1500,
+    system: SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: userMessage }],
+  });
+
+  const requestHeaders = {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+  };
+
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 1200;
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMessage }],
-      }),
-    });
+    let response;
+    let lastError;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: requestHeaders,
+        body: requestBody,
+      });
+
+      // Success or a non-retryable error — stop retrying
+      if (response.ok || response.status !== 529) break;
+
+      // 529 = overloaded — wait and retry
+      if (attempt < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS * attempt));
+      } else {
+        lastError = 'Anthropic API is overloaded. Please try again in a moment.';
+      }
+    }
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: errData.error?.message || `Anthropic API error ${response.status}` }),
+        body: JSON.stringify({ error: lastError || errData.error?.message || `Anthropic API error ${response.status}` }),
       };
     }
 

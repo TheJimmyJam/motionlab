@@ -181,7 +181,7 @@ async function generateAnimation() {
   generateBtn.disabled = true;
   generateBtn.classList.add('generating');
   codeDisplay.disabled = true;
-  setStatus('Generating animation…', 'loading');
+  setStatus('Generating animation… (this may take a moment)', 'loading');
   codeDisplay.value = '// Thinking…';
 
   const duration = parseFloat(durationSlider.value).toFixed(1);
