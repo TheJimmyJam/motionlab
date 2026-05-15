@@ -57,9 +57,29 @@
         </button>
       </div>
 
-      <div class="panel-section suggestions-section">
-        <label class="panel-label">Quick starts</label>
+      <div class="panel-section">
+        <div class="panel-label-row">
+          <label class="panel-label" style="margin-bottom:0;">Targets in canvas</label>
+          <span class="hint" title="Click a chip to insert this selector into your prompt.">click to insert</span>
+        </div>
+        <div id="targets" class="targets-row"></div>
+      </div>
+
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-pane="quickstarts-section">Quick starts</button>
+        <button class="panel-tab" data-pane="history-section">History <span id="history-count" class="tab-count"></span></button>
+      </div>
+
+      <div class="panel-section suggestions-section" id="quickstarts-section">
         <div id="suggestions" class="suggestions"></div>
+      </div>
+
+      <div class="panel-section history-section" id="history-section" hidden>
+        <div class="history-header">
+          <span class="history-backend" id="history-backend">local</span>
+          <button id="history-clear" class="link-btn" title="Clear all saved animations">clear all</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
       </div>
 
       <div class="status-bar">
@@ -140,6 +160,31 @@
           </div>
 
           <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">Timeline</span>
+              <span class="control-value" id="timeline-val">0.00s / 0.00s</span>
+            </div>
+            <input type="range" id="timeline-scrub" class="slider" min="0" max="1000" step="1" value="0">
+          </div>
+
+          <div class="control-group">
+            <div class="toggle-row">
+              <button id="loop-btn" class="btn btn-sm btn-toggle" title="Repeat the animation forever">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <path d="M2 4.5h5.5L6 3M9 6.5H3.5L5 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Loop
+              </button>
+              <button id="yoyo-btn" class="btn btn-sm btn-toggle" title="Play forward, then reverse, then forward…">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <path d="M1.5 5.5h8M3.5 3.5L1.5 5.5l2 2M7.5 3.5l2 2-2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Yoyo
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
             <button id="pause-btn" class="btn btn-sm btn-transport">⏸ Pause</button>
           </div>
         </div>
@@ -197,6 +242,9 @@
     </button>
   </nav>
 
+  <!-- Optional Supabase: uncomment to enable cloud history. -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
+  <script src="storage.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

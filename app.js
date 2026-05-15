@@ -66,11 +66,31 @@ const timescaleSlider = document.getElementById('timescale');
 const timescaleVal   = document.getElementById('timescale-val');
 const themeBtn       = document.getElementById('theme-btn');
 
+// New in Tier 1
+const timelineScrub  = document.getElementById('timeline-scrub');
+const timelineVal    = document.getElementById('timeline-val');
+const loopBtn        = document.getElementById('loop-btn');
+const yoyoBtn        = document.getElementById('yoyo-btn');
+const targetsEl      = document.getElementById('targets');
+const historyListEl  = document.getElementById('history-list');
+const historyClearBtn = document.getElementById('history-clear');
+const historyCountEl = document.getElementById('history-count');
+const historyBackend = document.getElementById('history-backend');
+const panelTabs      = document.querySelectorAll('.panel-tab');
+
 // ─── State ─────────────────────────────────────────────────────────────────────
 
 let currentCode  = '';
+let currentPrompt = '';
 let isGenerating = false;
 let isPaused     = false;
+let isLoop       = false;
+let isYoyo       = false;
+let isScrubbing  = false;
+let lastDuration = 0;
+
+// History store — picks Supabase if configured, falls back to localStorage.
+const historyStore = window.JanklessStorage.createStore();
 
 // ─── Mobile tabs ───────────────────────────────────────────────────────────────
 
@@ -165,6 +185,214 @@ SUGGESTIONS.forEach(s => {
   suggestionsEl.appendChild(btn);
 });
 
+// ─── Targets — clickable selectors that exist in the canvas ──────────────────
+
+const TARGETS = [
+  { sel: '#heading',  label: '#heading'  },
+  { sel: '#subtext',  label: '#subtext'  },
+  { sel: '#card',     label: '#card'     },
+  { sel: '.card-bar', label: '.card-bar' },
+  { sel: '#boxes',    label: '#boxes'    },
+  { sel: '.box',      label: '.box'      },
+  { sel: '#box1',     label: '#box1'     },
+  { sel: '#box2',     label: '#box2'     },
+  { sel: '#box3',     label: '#box3'     },
+  { sel: '#circle',   label: '#circle'   },
+];
+
+function renderTargets() {
+  targetsEl.innerHTML = '';
+  TARGETS.forEach(t => {
+    const chip = document.createElement('button');
+    chip.className = 'target-chip';
+    chip.textContent = t.label;
+    chip.title = `Insert "${t.sel}" into your prompt`;
+    chip.addEventListener('click', () => insertIntoPrompt(t.sel));
+    targetsEl.appendChild(chip);
+  });
+}
+
+function insertIntoPrompt(text) {
+  const start = promptInput.selectionStart;
+  const end   = promptInput.selectionEnd;
+  const before = promptInput.value.slice(0, start);
+  const after  = promptInput.value.slice(end);
+  // Add a space if we're glued to existing non-space text
+  const pad = before && !/\s$/.test(before) ? ' ' : '';
+  const insert = pad + text + ' ';
+  promptInput.value = before + insert + after;
+  const pos = start + insert.length;
+  promptInput.focus();
+  promptInput.setSelectionRange(pos, pos);
+}
+
+renderTargets();
+
+// ─── Panel tabs (Quick starts / History) ─────────────────────────────────────
+
+panelTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.pane;
+    panelTabs.forEach(t => t.classList.toggle('active', t === tab));
+    document.getElementById('quickstarts-section').hidden = (target !== 'quickstarts-section');
+    document.getElementById('history-section').hidden    = (target !== 'history-section');
+    if (target === 'history-section') refreshHistory();
+  });
+});
+
+// ─── History — list / save / load / delete ──────────────────────────────────
+
+if (historyBackend) {
+  historyBackend.textContent = historyStore.name;
+  historyBackend.classList.toggle('supabase', historyStore.name === 'supabase');
+}
+
+async function refreshHistory() {
+  let entries = [];
+  try {
+    entries = await historyStore.list();
+  } catch (e) {
+    console.error('[Jankless] history list failed:', e);
+    historyListEl.innerHTML = '<div class="history-empty">Couldn\'t load history.</div>';
+    return;
+  }
+
+  historyCountEl.textContent = entries.length || '';
+  historyListEl.innerHTML = '';
+
+  if (!entries.length) {
+    historyListEl.innerHTML = '<div class="history-empty">No saved animations yet — generate one to start a history.</div>';
+    return;
+  }
+
+  entries.forEach(entry => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.title = 'Click to reload this prompt and code';
+
+    const promptLine = document.createElement('div');
+    promptLine.className = 'history-item-prompt';
+    promptLine.textContent = entry.prompt;
+
+    const meta = document.createElement('div');
+    meta.className = 'history-item-meta';
+    const time = document.createElement('span');
+    time.textContent = relativeTime(entry.createdAt);
+    const del = document.createElement('button');
+    del.className = 'history-item-delete';
+    del.textContent = '×';
+    del.title = 'Delete this entry';
+    del.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      try {
+        await historyStore.remove(entry.id);
+        refreshHistory();
+      } catch (e) {
+        console.error('[Jankless] history delete failed:', e);
+      }
+    });
+    meta.appendChild(time);
+    meta.appendChild(del);
+
+    item.addEventListener('click', () => loadFromHistory(entry));
+
+    item.appendChild(promptLine);
+    item.appendChild(meta);
+    historyListEl.appendChild(item);
+  });
+}
+
+function loadFromHistory(entry) {
+  promptInput.value = entry.prompt;
+  currentPrompt = entry.prompt;
+  currentCode = entry.code;
+  displayCode(entry.code);
+  if (entry.duration != null) { durationSlider.value = entry.duration; durationVal.textContent = (+entry.duration).toFixed(1) + 's'; }
+  if (entry.ease)              { easeSelect.value = entry.ease; }
+  if (entry.stagger != null)   { staggerSlider.value = entry.stagger; staggerVal.textContent = (+entry.stagger).toFixed(2) + 's'; }
+  runAnimation(entry.code);
+  resetPauseState();
+  setStatus('↺ Loaded from history.', 'success');
+  if (isMobile()) switchTab('preview');
+}
+
+async function saveToHistory(prompt, code) {
+  try {
+    await historyStore.add({
+      prompt,
+      code,
+      duration: parseFloat(durationSlider.value),
+      ease:     easeSelect.value,
+      stagger:  parseFloat(staggerSlider.value),
+      loop:     isLoop,
+      yoyo:     isYoyo,
+    });
+    // Refresh the count quietly
+    const count = (await historyStore.list()).length;
+    historyCountEl.textContent = count || '';
+  } catch (e) {
+    console.warn('[Jankless] history save failed:', e);
+  }
+}
+
+historyClearBtn.addEventListener('click', async () => {
+  if (!confirm('Delete all saved animations?')) return;
+  try {
+    await historyStore.clear();
+    refreshHistory();
+  } catch (e) {
+    console.error('[Jankless] history clear failed:', e);
+  }
+});
+
+function relativeTime(ts) {
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60)        return 'just now';
+  if (s < 3600)      return Math.floor(s / 60) + 'm ago';
+  if (s < 86400)     return Math.floor(s / 3600) + 'h ago';
+  if (s < 86400 * 7) return Math.floor(s / 86400) + 'd ago';
+  return new Date(ts).toLocaleDateString();
+}
+
+// Init the count badge on load
+refreshHistory();
+
+// ─── Loop / Yoyo toggles ─────────────────────────────────────────────────────
+
+loopBtn.addEventListener('click', () => {
+  isLoop = !isLoop;
+  loopBtn.classList.toggle('active', isLoop);
+  canvasFrame.contentWindow.postMessage({ type: 'SET_LOOP', value: isLoop }, '*');
+});
+
+yoyoBtn.addEventListener('click', () => {
+  isYoyo = !isYoyo;
+  yoyoBtn.classList.toggle('active', isYoyo);
+  canvasFrame.contentWindow.postMessage({ type: 'SET_YOYO', value: isYoyo }, '*');
+});
+
+// ─── Timeline scrubber ────────────────────────────────────────────────────────
+
+function fmtSecs(n) {
+  return (n || 0).toFixed(2) + 's';
+}
+
+timelineScrub.addEventListener('input', () => {
+  const value = parseFloat(timelineScrub.value) / 1000;
+  isScrubbing = true;
+  canvasFrame.contentWindow.postMessage({ type: 'SET_PROGRESS', value, scrubbing: true }, '*');
+  if (lastDuration) timelineVal.textContent = fmtSecs(value * lastDuration) + ' / ' + fmtSecs(lastDuration);
+});
+
+const endScrub = () => {
+  if (!isScrubbing) return;
+  isScrubbing = false;
+  canvasFrame.contentWindow.postMessage({ type: 'SCRUB_END', resume: !isPaused }, '*');
+};
+timelineScrub.addEventListener('change', endScrub);
+timelineScrub.addEventListener('mouseup', endScrub);
+timelineScrub.addEventListener('touchend', endScrub);
+
 // ─── Core: Generate Animation ──────────────────────────────────────────────────
 
 async function generateAnimation() {
@@ -203,10 +431,12 @@ async function generateAnimation() {
 
     const code = data.code || '';
     currentCode = code;
+    currentPrompt = prompt;
     displayCode(code);
     runAnimation(code);
     resetPauseState();
     setStatus('✓ Animation ready', 'success');
+    saveToHistory(prompt, code);
     if (isMobile()) switchTab('preview');
 
   } catch (err) {
@@ -232,9 +462,23 @@ function resetCanvas() {
 }
 
 window.addEventListener('message', e => {
+  if (!e.data || !e.data.type) return;
+
   if (e.data.type === 'ANIMATION_ERROR') {
     setStatus('✗ Runtime error: ' + e.data.error, 'error');
     console.error('[Jankless sandbox]', e.data.error);
+  }
+
+  if (e.data.type === 'ANIMATION_OK') {
+    if (typeof e.data.duration === 'number') lastDuration = e.data.duration;
+  }
+
+  if (e.data.type === 'PROGRESS') {
+    if (typeof e.data.duration === 'number') lastDuration = e.data.duration;
+    if (!isScrubbing) {
+      timelineScrub.value = String(Math.round((e.data.progress || 0) * 1000));
+    }
+    timelineVal.textContent = fmtSecs(e.data.time) + ' / ' + fmtSecs(e.data.duration);
   }
 });
 

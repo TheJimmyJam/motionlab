@@ -185,9 +185,13 @@
       flex-shrink: 0;
     }
 
-    @media (max-width: 768px) {
-      #heading, #subtext { display: none; }
-      #stage { gap: 16px; padding: 24px 20px; }
+    /* Compact layout when the canvas iframe gets narrow.
+       NOTE: only collapse padding/gap — keep all elements visible
+       so they stay valid animation targets. */
+    @media (max-width: 520px) {
+      #stage { gap: 14px; padding: 20px 16px; }
+      #heading { font-size: 26px; }
+      #subtext { font-size: 12px; }
     }
   </style>
 </head>
@@ -225,8 +229,17 @@
     const TARGETS = ['#heading', '#subtext', '#card', '.card-header', '.card-label', '.card-badge', '.card-metric', '.card-sub', '.card-bars', '.card-bar', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage'];
 
     let _timeScale = 1;
+    let _master    = null;       // master timeline that wraps user code
+    let _loop      = false;
+    let _yoyo      = false;
+    let _lastCode  = '';
+    let _scrubbing = false;       // user is dragging the scrubber
 
     function resetAll() {
+      if (_master) {
+        _master.kill();
+        _master = null;
+      }
       gsap.killTweensOf('*');
       TARGETS.forEach(sel => {
         const el = document.querySelector(sel);
@@ -234,47 +247,140 @@
       });
     }
 
+    function postProgress() {
+      if (!_master) return;
+      const dur = _master.duration() || 0;
+      const t   = _master.time();
+      const p   = dur > 0 ? Math.min(t / dur, 1) : 0;
+      window.parent.postMessage({
+        type: 'PROGRESS',
+        progress: p,
+        time: t,
+        duration: dur,
+      }, '*');
+    }
+
+    /**
+     * Run user code inside a master timeline.
+     *
+     * We monkey-patch gsap.to/from/fromTo/set/timeline so any tween the
+     * user creates is added to our master timeline instead of going
+     * straight to the global one. This gives us a single handle to
+     * scrub, loop, and yoyo over the whole animation.
+     */
+    function runUserCode(code) {
+      resetAll();
+
+      _master = gsap.timeline({
+        repeat: _loop ? -1 : 0,
+        yoyo:   _yoyo,
+        onUpdate: postProgress,
+        onRepeat: postProgress,
+        onComplete: postProgress,
+      });
+      _master.timeScale(_timeScale);
+
+      // Save originals
+      const _to       = gsap.to;
+      const _from     = gsap.from;
+      const _fromTo   = gsap.fromTo;
+      const _set      = gsap.set;
+      const _timeline = gsap.timeline;
+
+      // Patch — route everything through the master timeline
+      gsap.to     = function (target, vars)            { return _master.to(target, vars); };
+      gsap.from   = function (target, vars)            { return _master.from(target, vars); };
+      gsap.fromTo = function (target, fromVars, toVars){ return _master.fromTo(target, fromVars, toVars); };
+      gsap.set    = function (target, vars)            { return _master.set(target, vars); };
+      gsap.timeline = function (vars) {
+        const child = _timeline.call(gsap, vars);
+        _master.add(child);
+        return child;
+      };
+
+      try {
+        // eslint-disable-next-line no-new-func
+        const fn = new Function('gsap', code);
+        fn(gsap);
+        window.parent.postMessage({
+          type: 'ANIMATION_OK',
+          duration: _master.duration(),
+        }, '*');
+      } catch (err) {
+        window.parent.postMessage({ type: 'ANIMATION_ERROR', error: err.message }, '*');
+      } finally {
+        // Restore originals
+        gsap.to       = _to;
+        gsap.from     = _from;
+        gsap.fromTo   = _fromTo;
+        gsap.set      = _set;
+        gsap.timeline = _timeline;
+      }
+
+      postProgress();
+    }
+
     window.addEventListener('message', function(e) {
       if (!e.data || !e.data.type) return;
 
-      if (e.data.type === 'RUN_ANIMATION') {
-        resetAll();
-        gsap.globalTimeline.play();
-        gsap.globalTimeline.timeScale(_timeScale);
-        try {
-          // eslint-disable-next-line no-new-func
-          const fn = new Function('gsap', e.data.code);
-          fn(gsap);
-          window.parent.postMessage({ type: 'ANIMATION_OK' }, '*');
-        } catch (err) {
-          window.parent.postMessage({ type: 'ANIMATION_ERROR', error: err.message }, '*');
-        }
-      }
+      switch (e.data.type) {
 
-      if (e.data.type === 'RESET') {
-        resetAll();
-        gsap.globalTimeline.play();
-        gsap.globalTimeline.timeScale(_timeScale);
-        window.parent.postMessage({ type: 'RESET_OK' }, '*');
-      }
+        case 'RUN_ANIMATION':
+          _lastCode = e.data.code;
+          runUserCode(e.data.code);
+          break;
 
-      if (e.data.type === 'PAUSE') {
-        gsap.globalTimeline.pause();
-      }
+        case 'RESET':
+          resetAll();
+          window.parent.postMessage({ type: 'RESET_OK' }, '*');
+          window.parent.postMessage({ type: 'PROGRESS', progress: 0, time: 0, duration: 0 }, '*');
+          break;
 
-      if (e.data.type === 'PLAY') {
-        gsap.globalTimeline.play();
-      }
+        case 'PAUSE':
+          if (_master) _master.pause();
+          break;
 
-      if (e.data.type === 'SET_TIMESCALE') {
-        _timeScale = e.data.value;
-        gsap.globalTimeline.timeScale(_timeScale);
-      }
+        case 'PLAY':
+          if (_master) _master.play();
+          break;
 
-      if (e.data.type === 'SET_THEME') {
-        document.body.setAttribute('data-theme', e.data.theme);
+        case 'SET_TIMESCALE':
+          _timeScale = e.data.value;
+          if (_master) _master.timeScale(_timeScale);
+          break;
+
+        case 'SET_PROGRESS':
+          if (_master) {
+            _scrubbing = !!e.data.scrubbing;
+            if (_scrubbing) _master.pause();
+            _master.progress(Math.max(0, Math.min(1, e.data.value)));
+          }
+          break;
+
+        case 'SCRUB_END':
+          _scrubbing = false;
+          if (_master && e.data.resume) _master.play();
+          break;
+
+        case 'SET_LOOP':
+          _loop = !!e.data.value;
+          // Re-run so the new repeat setting takes effect
+          if (_lastCode) runUserCode(_lastCode);
+          break;
+
+        case 'SET_YOYO':
+          _yoyo = !!e.data.value;
+          if (_lastCode) runUserCode(_lastCode);
+          break;
+
+        case 'SET_THEME':
+          document.body.setAttribute('data-theme', e.data.theme);
+          break;
       }
     });
+
+    // Tell the parent we're ready
+    window.parent.postMessage({ type: 'SANDBOX_READY' }, '*');
   </script>
 </body>
 </html>
