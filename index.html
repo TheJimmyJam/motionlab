@@ -46,7 +46,7 @@
           id="prompt"
           class="prompt-input"
           placeholder="e.g. Bounce the boxes in from below with stagger, then pulse the circle…"
-          rows="4"
+          rows="2"
         ></textarea>
         <button id="generate-btn" class="btn btn-primary">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -72,8 +72,9 @@
       </div>
 
       <div class="panel-section suggestions-section" id="learn-section">
-        <div class="learn-intro">
-          One target, one motion. Each preset shows what a single GSAP technique looks like — read the prompt, watch the canvas.
+        <div class="learn-intro" id="learn-intro">
+          <span class="learn-intro-text">One target, one motion. Each preset shows what a single GSAP technique looks like — read the prompt, watch the canvas.</span>
+          <button class="learn-intro-close" id="learn-intro-close" title="Dismiss this tip" aria-label="Dismiss">×</button>
         </div>
         <div id="learn-list" class="suggestions"></div>
       </div>

@@ -337,6 +337,22 @@ function renderPresets(containerId, presets) {
 renderPresets('learn-list',   LEARN_PRESETS);
 renderPresets('recipes-list', RECIPE_PRESETS);
 
+// ─── Learn intro: dismissible, remembers your choice ────────────────────────
+
+const LEARN_INTRO_KEY = 'jankless-learn-intro-dismissed';
+const learnIntroEl    = document.getElementById('learn-intro');
+const learnIntroClose = document.getElementById('learn-intro-close');
+
+if (learnIntroEl && learnIntroClose) {
+  if (localStorage.getItem(LEARN_INTRO_KEY) === '1') {
+    learnIntroEl.style.display = 'none';
+  }
+  learnIntroClose.addEventListener('click', () => {
+    learnIntroEl.style.display = 'none';
+    try { localStorage.setItem(LEARN_INTRO_KEY, '1'); } catch (_) {}
+  });
+}
+
 // ─── Panel tabs (Learn / Recipes / History) ──────────────────────────────────
 
 const PANE_IDS = ['learn-section', 'recipes-section', 'history-section'];

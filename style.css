@@ -712,6 +712,30 @@ main {
   border-radius: 6px;
   padding: 8px 10px;
   margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.learn-intro-text { flex: 1; }
+
+.learn-intro-close {
+  background: transparent;
+  border: none;
+  color: var(--muted-mid);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  margin: -2px -2px 0 0;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.learn-intro-close:hover {
+  color: var(--text);
+  background: rgba(99,102,241,0.12);
 }
 
 [data-theme="light"] .learn-intro {
