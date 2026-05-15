@@ -202,14 +202,20 @@
     }
     body[data-theme="light"] #underline { stroke: #6366f1; }
 
-    /* Target 8 — Morph Shape (for MorphSVG demos) */
-    #morph-svg {
+    /* Targets 8 + 9 — Morph Shapes, sit on either side of the Hero Circle */
+    #symbol-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+    #morph-svg, #morph-svg-2 {
       display: block;
       overflow: visible;
+      flex-shrink: 0;
     }
-    #morph-shape {
-      fill: url(#morph-grad);
-    }
+    #morph-shape   { fill: url(#morph-grad); }
+    #morph-shape-2 { fill: url(#morph-grad-2); }
 
     /* Compact layout when the canvas iframe gets narrow.
        NOTE: only collapse padding/gap — keep all elements visible
@@ -279,17 +285,32 @@
       <div class="box" id="box2"></div>
       <div class="box" id="box3"></div>
     </div>
-    <!-- Target 8 — Morph shape (MorphSVG demos). Default: heart -->
-    <svg id="morph-svg" width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="morph-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#ec4899"/>
-          <stop offset="100%" stop-color="#f97316"/>
-        </linearGradient>
-      </defs>
-      <path id="morph-shape" d="M32 56 C 8 36, 4 16, 20 12 C 28 10, 32 18, 32 22 C 32 18, 36 10, 44 12 C 60 16, 56 36, 32 56 Z"/>
-    </svg>
-    <div id="circle"></div>
+    <!-- Bottom row: Morph Heart (Target 8) — Hero Circle (Target 6) — Morph Clover (Target 9) -->
+    <div id="symbol-row">
+      <!-- Target 8 — Morph Heart -->
+      <svg id="morph-svg" width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="morph-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ec4899"/>
+            <stop offset="100%" stop-color="#f97316"/>
+          </linearGradient>
+        </defs>
+        <path id="morph-shape" d="M32 56 C 8 36, 4 16, 20 12 C 28 10, 32 18, 32 22 C 32 18, 36 10, 44 12 C 60 16, 56 36, 32 56 Z"/>
+      </svg>
+
+      <div id="circle"></div>
+
+      <!-- Target 9 — Morph Clover -->
+      <svg id="morph-svg-2" width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="morph-grad-2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#22c55e"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+        <path id="morph-shape-2" d="M32 8 C32 14 38 18 44 16 C48 22 46 30 40 32 C46 34 48 42 44 48 C38 46 32 50 32 56 C32 50 26 46 20 48 C16 42 18 34 24 32 C18 30 16 22 20 16 C26 18 32 14 32 8 Z"/>
+      </svg>
+    </div>
   </div>
 
   <!-- GSAP core -->
@@ -331,17 +352,16 @@
     safeReg('ScrambleTextPlugin', window.ScrambleTextPlugin);
     safeReg('TextPlugin',         window.TextPlugin);
 
-    const TARGETS = ['#heading', '#subtext', '#card', '.card-header', '.card-label', '.card-badge', '.card-metric', '.card-sub', '.card-bars', '.card-bar', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage', '#underline', '#underline-svg', '#morph-shape', '#morph-svg'];
+    const TARGETS = ['#heading', '#subtext', '#card', '.card-header', '.card-label', '.card-badge', '.card-metric', '.card-sub', '.card-bars', '.card-bar', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage', '#underline', '#underline-svg', '#morph-shape', '#morph-svg', '#morph-shape-2', '#morph-svg-2', '#symbol-row'];
 
-    // Capture the original morph path so we can revert across runs
-    const _morphOriginal = (() => {
-      const el = document.getElementById('morph-shape');
+    // Capture the original SVG path data so we can revert across runs
+    const _capturePath = id => {
+      const el = document.getElementById(id);
       return el ? el.getAttribute('d') : null;
-    })();
-    const _underlineOriginal = (() => {
-      const el = document.getElementById('underline');
-      return el ? el.getAttribute('d') : null;
-    })();
+    };
+    const _morphOriginal     = _capturePath('morph-shape');
+    const _morph2Original    = _capturePath('morph-shape-2');
+    const _underlineOriginal = _capturePath('underline');
 
     let _timeScale = 1;
     let _master    = null;       // master timeline that wraps user code
@@ -363,6 +383,8 @@
       // Restore SVG path data so morph/draw demos can re-run cleanly
       const morph = document.getElementById('morph-shape');
       if (morph && _morphOriginal) morph.setAttribute('d', _morphOriginal);
+      const morph2 = document.getElementById('morph-shape-2');
+      if (morph2 && _morph2Original) morph2.setAttribute('d', _morph2Original);
       const underline = document.getElementById('underline');
       if (underline && _underlineOriginal) underline.setAttribute('d', _underlineOriginal);
       // Revert SplitText if it injected wrappers

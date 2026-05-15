@@ -33,6 +33,7 @@ const LEARN_PRESETS = [
 
   // MorphSVGPlugin — shape morphing
   'Morph Target 8 into a star shape',
+  'Morph Target 9 into a circle, then back to the clover',
 
   // Flip — state transitions
   'FLIP Target 3 to scale up to 1.6×, then back',
@@ -267,8 +268,9 @@ const TARGETS = [
   { n: 4, label: 'Chart Bars',    sel: '.card-bar',     count: 7, hint: 'Seven bars inside the card chart' },
   { n: 5, label: 'Feature Boxes', sel: '.box',          count: 3, hint: 'Three colored boxes' },
   { n: 6, label: 'Hero Circle',   sel: '#circle',       count: 1, hint: 'Pink/orange gradient circle' },
-  { n: 7, label: 'Underline',     sel: '#underline',    count: 1, hint: 'SVG path under the heading — best with DrawSVG' },
-  { n: 8, label: 'Morph Shape',   sel: '#morph-shape',  count: 1, hint: 'SVG path that can morph into other shapes — uses MorphSVG' },
+  { n: 7, label: 'Underline',     sel: '#underline',     count: 1, hint: 'SVG path under the heading — best with DrawSVG' },
+  { n: 8, label: 'Morph Heart',   sel: '#morph-shape',   count: 1, hint: 'Pink/orange heart SVG — morph it into stars, squares, etc. with MorphSVG' },
+  { n: 9, label: 'Morph Clover',  sel: '#morph-shape-2', count: 1, hint: 'Green four-leaf clover SVG — second MorphSVG demo target' },
 ];
 
 function renderTargets() {

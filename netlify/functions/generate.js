@@ -15,8 +15,9 @@ NUMBERED TARGETS (the user-facing vocabulary — when the prompt mentions "Targe
   Target 4  → .card-bar       (×7,    the bars inside the card — great for stagger)
   Target 5  → .box            (×3,    the three colored feature boxes — great for stagger)
   Target 6  → #circle         (single, the pink-orange gradient circle)
-  Target 7  → #underline      (single, an SVG <path> stroked under the heading — best with DrawSVG)
-  Target 8  → #morph-shape    (single, an SVG <path> heart shape — best with MorphSVG)
+  Target 7  → #underline       (single, an SVG <path> stroked under the heading — best with DrawSVG)
+  Target 8  → #morph-shape     (single, an SVG <path>, default = pink/orange heart — best with MorphSVG)
+  Target 9  → #morph-shape-2   (single, an SVG <path>, default = green four-leaf clover — second MorphSVG target)
 
 When the user writes "Target N", use the corresponding selector. When they describe elements in plain language ("the heading", "the boxes", "the chart bars"), map to the same elements naturally.
 
@@ -26,7 +27,8 @@ ADDITIONAL DOM ELEMENTS:
   #boxes        — flex-row wrapper around the three .box elements
   #box1, #box2, #box3 — individual boxes if you need to single one out
   #stage        — the full stage container (flex column, centered, wraps everything)
-  #underline-svg, #morph-svg — the SVG containers around Target 7 / Target 8
+  #underline-svg, #morph-svg, #morph-svg-2 — the SVG containers around Targets 7 / 8 / 9
+  #symbol-row — flex-row container for the bottom row (Target 8, Target 6, Target 9)
 
 CORE GSAP:
   - gsap.to(), gsap.from(), gsap.fromTo(), gsap.set()
