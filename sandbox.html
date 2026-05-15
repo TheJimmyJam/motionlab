@@ -13,13 +13,16 @@
       background: #08080f;
       font-family: 'Inter', -apple-system, sans-serif;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-y: auto;       /* allow scroll if stage is taller than viewport */
+      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
       transition: background 0.2s;
     }
+    body::-webkit-scrollbar { width: 6px; }
+    body::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 3px; }
 
     /* Subtle grid background */
     body::before {
@@ -71,8 +74,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 22px;
-      padding: 48px 40px;
+      gap: 16px;
+      padding: 28px 32px;
       width: 100%;
       min-height: 100vh;
       position: relative;
@@ -277,7 +280,7 @@
       <div class="box" id="box3"></div>
     </div>
     <!-- Target 8 — Morph shape (MorphSVG demos). Default: heart -->
-    <svg id="morph-svg" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <svg id="morph-svg" width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="morph-grad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#ec4899"/>
@@ -520,7 +523,7 @@
     function clearHighlights() {
       if (_hlLayer) _hlLayer.innerHTML = '';
     }
-    function highlightTargets(selector) {
+    function drawRectsForSelector(selector) {
       clearHighlights();
       if (!selector) return;
       let els;
@@ -539,6 +542,29 @@
         hl.style.height = (r.height + pad * 2) + 'px';
         layer.appendChild(hl);
       });
+    }
+
+    function highlightTargets(selector) {
+      if (!selector) { clearHighlights(); return; }
+      let els;
+      try { els = document.querySelectorAll(selector); }
+      catch (_) { return; }
+
+      // If the first match is off-screen, scroll it into view first,
+      // then draw the highlights at their post-scroll positions.
+      const first = els[0];
+      if (first) {
+        const r = first.getBoundingClientRect();
+        const offTop    = r.top < 0;
+        const offBottom = r.bottom > window.innerHeight;
+        if (offTop || offBottom) {
+          first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Wait a moment for the smooth scroll to land before drawing
+          setTimeout(() => drawRectsForSelector(selector), 320);
+          return;
+        }
+      }
+      drawRectsForSelector(selector);
     }
     // Recompute on resize so highlights track layout changes
     window.addEventListener('resize', () => {
