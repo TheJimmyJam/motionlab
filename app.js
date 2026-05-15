@@ -16,12 +16,38 @@ const API_ENDPOINT = '/api/generate';
 // Recipes (the existing creative combinations).
 
 const LEARN_PRESETS = [
+  // Core motion
   'Slide Target 1 in from above with a bounce',
   'Fade Target 3 in from below',
-  'Stagger Target 4 in with a wave',
-  'Stagger Target 5 in from the left',
-  'Pulse Target 6 like a heartbeat',
-  'Spin Target 6 a full turn',
+  'Stagger Target 4 in with a wave from the center',
+  'Stagger Target 5 in from the left, one by one',
+  'Pulse Target 6 like a heartbeat on loop',
+  'Spin Target 6 a full turn with elastic ease',
+
+  // SplitText — char-by-char text reveal
+  'Reveal Target 1 character by character with a wave',
+  'Make Target 2 type itself out word by word',
+
+  // DrawSVGPlugin — animate a stroked path
+  'Draw Target 7 from left to right under the heading',
+
+  // MorphSVGPlugin — shape morphing
+  'Morph Target 8 into a star shape',
+
+  // Flip — state transitions
+  'FLIP Target 3 to scale up to 1.6×, then back',
+
+  // MotionPath — animate along a path
+  'Send Target 6 along a wavy horizontal path across the canvas',
+
+  // CustomEase — custom curve
+  'Animate Target 1 in with a custom ease curve that overshoots and settles',
+
+  // Physics2D — gravity / velocity
+  'Drop Target 6 with gravity and let it bounce on the floor',
+
+  // ScrambleText — decode text effect
+  'Scramble Target 1 to decode from random characters into "Jankless"',
 ];
 
 const RECIPE_PRESETS = [
@@ -88,6 +114,7 @@ const historyClearBtn = document.getElementById('history-clear');
 const historyCountEl = document.getElementById('history-count');
 const historyBackend = document.getElementById('history-backend');
 const panelTabs      = document.querySelectorAll('.panel-tab');
+const easeCurveSvg   = document.getElementById('ease-curve');
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 
@@ -182,6 +209,51 @@ timescaleSlider.addEventListener('input', () => {
   canvasFrame.contentWindow.postMessage({ type: 'SET_TIMESCALE', value: parseFloat(val) }, '*');
 });
 
+// ─── Ease curve visualizer ────────────────────────────────────────────────────
+// Tiny SVG curve preview next to the Ease dropdown. Samples the easing
+// function and plots it so you can SEE what each ease actually does.
+
+const EASE_SAMPLERS = {
+  'linear':       t => t,
+  'sine.inOut':   t => -(Math.cos(Math.PI * t) - 1) / 2,
+  'power2.out':   t => 1 - Math.pow(1 - t, 2),
+  'power3.out':   t => 1 - Math.pow(1 - t, 3),
+  'expo.out':     t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+  'back.out(1.7)': t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+  'elastic.out(1,0.3)': t => {
+    if (t === 0 || t === 1) return t;
+    const c4 = (2 * Math.PI) / 0.3;
+    return Math.pow(2, -10 * t) * Math.sin((t - 0.075) * c4) + 1;
+  },
+  'bounce.out': t => {
+    const n1 = 7.5625, d1 = 2.75;
+    if (t < 1 / d1)        return n1 * t * t;
+    else if (t < 2 / d1) { t -= 1.5 / d1;   return n1 * t * t + 0.75; }
+    else if (t < 2.5 / d1){ t -= 2.25 / d1; return n1 * t * t + 0.9375; }
+    else                  { t -= 2.625 / d1; return n1 * t * t + 0.984375; }
+  },
+};
+
+function drawEaseCurve(name) {
+  if (!easeCurveSvg) return;
+  const sampler = EASE_SAMPLERS[name] || EASE_SAMPLERS['linear'];
+  const W = 100, H = 60, pts = [];
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60;
+    const v = sampler(t);
+    pts.push((t * W).toFixed(2) + ',' + (H - v * H).toFixed(2));
+  }
+  easeCurveSvg.innerHTML =
+    `<line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="currentColor" stroke-width="0.5" opacity="0.25"/>` +
+    `<line x1="0" y1="0"   x2="${W}" y2="0"   stroke="currentColor" stroke-width="0.5" opacity="0.15" stroke-dasharray="2 2"/>` +
+    `<polyline points="${pts.join(' ')}" fill="none" stroke="#00e67a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+if (easeCurveSvg) {
+  drawEaseCurve(easeSelect.value);
+  easeSelect.addEventListener('change', () => drawEaseCurve(easeSelect.value));
+}
+
 // ─── Targets — numbered, named, GSAP-aligned vocabulary ─────────────────────
 //
 // Each chip teaches the GSAP "target" abstraction. Hovering highlights the
@@ -189,12 +261,14 @@ timescaleSlider.addEventListener('input', () => {
 // (the AI server knows the mapping back to the actual selector).
 
 const TARGETS = [
-  { n: 1, label: 'Heading',       sel: '#heading',   count: 1, hint: 'Big "Jankless" title' },
-  { n: 2, label: 'Tagline',       sel: '#subtext',   count: 1, hint: 'Subtitle below the heading' },
-  { n: 3, label: 'KPI Card',      sel: '#card',      count: 1, hint: 'Monthly Revenue dashboard card' },
-  { n: 4, label: 'Chart Bars',    sel: '.card-bar',  count: 7, hint: 'Seven bars inside the card chart' },
-  { n: 5, label: 'Feature Boxes', sel: '.box',       count: 3, hint: 'Three colored boxes' },
-  { n: 6, label: 'Hero Circle',   sel: '#circle',    count: 1, hint: 'Pink/orange gradient circle' },
+  { n: 1, label: 'Heading',       sel: '#heading',      count: 1, hint: 'Big "Jankless" title' },
+  { n: 2, label: 'Tagline',       sel: '#subtext',      count: 1, hint: 'Subtitle below the heading' },
+  { n: 3, label: 'KPI Card',      sel: '#card',         count: 1, hint: 'Monthly Revenue dashboard card' },
+  { n: 4, label: 'Chart Bars',    sel: '.card-bar',     count: 7, hint: 'Seven bars inside the card chart' },
+  { n: 5, label: 'Feature Boxes', sel: '.box',          count: 3, hint: 'Three colored boxes' },
+  { n: 6, label: 'Hero Circle',   sel: '#circle',       count: 1, hint: 'Pink/orange gradient circle' },
+  { n: 7, label: 'Underline',     sel: '#underline',    count: 1, hint: 'SVG path under the heading — best with DrawSVG' },
+  { n: 8, label: 'Morph Shape',   sel: '#morph-shape',  count: 1, hint: 'SVG path that can morph into other shapes — uses MorphSVG' },
 ];
 
 function renderTargets() {

@@ -185,6 +185,29 @@
       flex-shrink: 0;
     }
 
+    /* Target 7 — Underline (for DrawSVG demos) */
+    #underline-svg {
+      display: block;
+      margin-top: -10px;
+      overflow: visible;
+    }
+    #underline {
+      stroke: #6366f1;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+    }
+    body[data-theme="light"] #underline { stroke: #6366f1; }
+
+    /* Target 8 — Morph Shape (for MorphSVG demos) */
+    #morph-svg {
+      display: block;
+      overflow: visible;
+    }
+    #morph-shape {
+      fill: url(#morph-grad);
+    }
+
     /* Compact layout when the canvas iframe gets narrow.
        NOTE: only collapse padding/gap — keep all elements visible
        so they stay valid animation targets. */
@@ -226,6 +249,10 @@
 <body>
   <div id="stage">
     <div id="heading">Jankless</div>
+    <!-- Target 7 — Underline path (DrawSVG demos) -->
+    <svg id="underline-svg" width="220" height="14" viewBox="0 0 220 14" xmlns="http://www.w3.org/2000/svg">
+      <path id="underline" d="M5 8 Q 55 0, 110 7 T 215 6"/>
+    </svg>
     <div id="subtext">Beautiful GSAP animations, zero jank.</div>
     <div id="card">
       <div class="card-header">
@@ -249,12 +276,69 @@
       <div class="box" id="box2"></div>
       <div class="box" id="box3"></div>
     </div>
+    <!-- Target 8 — Morph shape (MorphSVG demos). Default: heart -->
+    <svg id="morph-svg" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="morph-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ec4899"/>
+          <stop offset="100%" stop-color="#f97316"/>
+        </linearGradient>
+      </defs>
+      <path id="morph-shape" d="M32 56 C 8 36, 4 16, 20 12 C 28 10, 32 18, 32 22 C 32 18, 36 10, 44 12 C 60 16, 56 36, 32 56 Z"/>
+    </svg>
     <div id="circle"></div>
   </div>
 
+  <!-- GSAP core -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <!-- Bonus + free plugins (self-hosted, see /vendor/) -->
+  <script src="vendor/EasePack.min.js"></script>
+  <script src="vendor/CustomEase.min.js"></script>
+  <script src="vendor/CustomBounce.min.js"></script>
+  <script src="vendor/CustomWiggle.min.js"></script>
+  <script src="vendor/SplitText.min.js"></script>
+  <script src="vendor/Flip.min.js"></script>
+  <script src="vendor/MotionPathPlugin.min.js"></script>
+  <script src="vendor/DrawSVGPlugin.min.js"></script>
+  <script src="vendor/MorphSVGPlugin.min.js"></script>
+  <script src="vendor/Physics2DPlugin.min.js"></script>
+  <script src="vendor/ScrambleTextPlugin.min.js"></script>
+  <script src="vendor/TextPlugin.min.js"></script>
   <script>
-    const TARGETS = ['#heading', '#subtext', '#card', '.card-header', '.card-label', '.card-badge', '.card-metric', '.card-sub', '.card-bars', '.card-bar', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage'];
+    // Register every plugin we expect to use. Wrapped in try so a missing
+    // file (e.g. user hasn't dropped one in /vendor/) only logs and keeps
+    // the rest working.
+    function safeReg(name, obj) {
+      if (typeof obj !== 'undefined') {
+        try { gsap.registerPlugin(obj); }
+        catch (e) { console.warn('[Jankless] failed to register', name, e); }
+      } else {
+        console.info('[Jankless] plugin not loaded:', name);
+      }
+    }
+    safeReg('CustomEase',         window.CustomEase);
+    safeReg('CustomBounce',       window.CustomBounce);
+    safeReg('CustomWiggle',       window.CustomWiggle);
+    safeReg('SplitText',          window.SplitText);
+    safeReg('Flip',               window.Flip);
+    safeReg('MotionPathPlugin',   window.MotionPathPlugin);
+    safeReg('DrawSVGPlugin',      window.DrawSVGPlugin);
+    safeReg('MorphSVGPlugin',     window.MorphSVGPlugin);
+    safeReg('Physics2DPlugin',    window.Physics2DPlugin);
+    safeReg('ScrambleTextPlugin', window.ScrambleTextPlugin);
+    safeReg('TextPlugin',         window.TextPlugin);
+
+    const TARGETS = ['#heading', '#subtext', '#card', '.card-header', '.card-label', '.card-badge', '.card-metric', '.card-sub', '.card-bars', '.card-bar', '#box1', '#box2', '#box3', '#circle', '#boxes', '#stage', '#underline', '#underline-svg', '#morph-shape', '#morph-svg'];
+
+    // Capture the original morph path so we can revert across runs
+    const _morphOriginal = (() => {
+      const el = document.getElementById('morph-shape');
+      return el ? el.getAttribute('d') : null;
+    })();
+    const _underlineOriginal = (() => {
+      const el = document.getElementById('underline');
+      return el ? el.getAttribute('d') : null;
+    })();
 
     let _timeScale = 1;
     let _master    = null;       // master timeline that wraps user code
@@ -273,6 +357,15 @@
         const el = document.querySelector(sel);
         if (el) gsap.set(el, { clearProps: 'all' });
       });
+      // Restore SVG path data so morph/draw demos can re-run cleanly
+      const morph = document.getElementById('morph-shape');
+      if (morph && _morphOriginal) morph.setAttribute('d', _morphOriginal);
+      const underline = document.getElementById('underline');
+      if (underline && _underlineOriginal) underline.setAttribute('d', _underlineOriginal);
+      // Revert SplitText if it injected wrappers
+      try {
+        document.querySelectorAll('.split-revert-marker').forEach(s => s.remove?.());
+      } catch (_) {}
     }
 
     function postProgress() {
