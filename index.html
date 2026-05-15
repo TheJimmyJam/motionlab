@@ -59,19 +59,27 @@
 
       <div class="panel-section">
         <div class="panel-label-row">
-          <label class="panel-label" style="margin-bottom:0;">Targets in canvas</label>
-          <span class="hint" title="Click a chip to insert this selector into your prompt.">click to insert</span>
+          <label class="panel-label" style="margin-bottom:0;">Targets</label>
+          <span class="hint" title="In GSAP, a target is anything a tween animates. Hover to highlight, click to insert.">hover to find · click to insert</span>
         </div>
         <div id="targets" class="targets-row"></div>
       </div>
 
       <div class="panel-tabs">
-        <button class="panel-tab active" data-pane="quickstarts-section">Quick starts</button>
+        <button class="panel-tab active" data-pane="learn-section">Learn</button>
+        <button class="panel-tab" data-pane="recipes-section">Recipes</button>
         <button class="panel-tab" data-pane="history-section">History <span id="history-count" class="tab-count"></span></button>
       </div>
 
-      <div class="panel-section suggestions-section" id="quickstarts-section">
-        <div id="suggestions" class="suggestions"></div>
+      <div class="panel-section suggestions-section" id="learn-section">
+        <div class="learn-intro">
+          One target, one motion. Each preset shows what a single GSAP technique looks like — read the prompt, watch the canvas.
+        </div>
+        <div id="learn-list" class="suggestions"></div>
+      </div>
+
+      <div class="panel-section suggestions-section" id="recipes-section" hidden>
+        <div id="recipes-list" class="suggestions"></div>
       </div>
 
       <div class="panel-section history-section" id="history-section" hidden>

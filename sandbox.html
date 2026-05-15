@@ -193,6 +193,34 @@
       #heading { font-size: 26px; }
       #subtext { font-size: 12px; }
     }
+
+    /* ─── Target highlight overlay ────────────────────────────────── */
+    #jl-highlight-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .jl-highlight {
+      position: absolute;
+      border: 2px dashed #6366f1;
+      border-radius: 6px;
+      background: rgba(99,102,241,0.07);
+      box-shadow:
+        0 0 0 1px rgba(99,102,241,0.25),
+        0 0 20px rgba(99,102,241,0.45);
+      animation: jl-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes jl-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.55; }
+    }
+    body[data-theme="light"] .jl-highlight {
+      background: rgba(99,102,241,0.1);
+      box-shadow:
+        0 0 0 1px rgba(99,102,241,0.35),
+        0 0 16px rgba(99,102,241,0.35);
+    }
   </style>
 </head>
 <body>
@@ -376,7 +404,53 @@
         case 'SET_THEME':
           document.body.setAttribute('data-theme', e.data.theme);
           break;
+
+        case 'HIGHLIGHT_TARGET':
+          highlightTargets(e.data.selector);
+          break;
+
+        case 'UNHIGHLIGHT_TARGET':
+          clearHighlights();
+          break;
       }
+    });
+
+    // ─── Hover highlight overlay ──────────────────────────────────────────
+    let _hlLayer = null;
+    function ensureHlLayer() {
+      if (_hlLayer && document.body.contains(_hlLayer)) return _hlLayer;
+      _hlLayer = document.createElement('div');
+      _hlLayer.id = 'jl-highlight-layer';
+      document.body.appendChild(_hlLayer);
+      return _hlLayer;
+    }
+    function clearHighlights() {
+      if (_hlLayer) _hlLayer.innerHTML = '';
+    }
+    function highlightTargets(selector) {
+      clearHighlights();
+      if (!selector) return;
+      let els;
+      try { els = document.querySelectorAll(selector); }
+      catch (_) { return; }
+      const layer = ensureHlLayer();
+      els.forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) return;
+        const hl = document.createElement('div');
+        hl.className = 'jl-highlight';
+        const pad = 4;
+        hl.style.left   = (r.left   - pad) + 'px';
+        hl.style.top    = (r.top    - pad) + 'px';
+        hl.style.width  = (r.width  + pad * 2) + 'px';
+        hl.style.height = (r.height + pad * 2) + 'px';
+        layer.appendChild(hl);
+      });
+    }
+    // Recompute on resize so highlights track layout changes
+    window.addEventListener('resize', () => {
+      // No stored selector — parent re-sends on hover. Just clear stale rects.
+      clearHighlights();
     });
 
     // Tell the parent we're ready

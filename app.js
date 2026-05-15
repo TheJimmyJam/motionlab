@@ -11,9 +11,20 @@
 // Key lives in Netlify env var ANTHROPIC_API_KEY — never in this file.
 const API_ENDPOINT = '/api/generate';
 
-// ─── Quick-start suggestions ───────────────────────────────────────────────────
+// ─── Presets ──────────────────────────────────────────────────────────────────
+// Two tiers: Learn (one target, one mechanic — designed to teach) and
+// Recipes (the existing creative combinations).
 
-const SUGGESTIONS = [
+const LEARN_PRESETS = [
+  'Slide Target 1 in from above with a bounce',
+  'Fade Target 3 in from below',
+  'Stagger Target 4 in with a wave',
+  'Stagger Target 5 in from the left',
+  'Pulse Target 6 like a heartbeat',
+  'Spin Target 6 a full turn',
+];
+
+const RECIPE_PRESETS = [
   // Entrances
   'Bounce the boxes in from below with stagger',
   'Slide the card in from the right with a spring',
@@ -171,33 +182,19 @@ timescaleSlider.addEventListener('input', () => {
   canvasFrame.contentWindow.postMessage({ type: 'SET_TIMESCALE', value: parseFloat(val) }, '*');
 });
 
-// ─── Suggestions ──────────────────────────────────────────────────────────────
-
-const suggestionsEl = document.getElementById('suggestions');
-SUGGESTIONS.forEach(s => {
-  const btn = document.createElement('button');
-  btn.className = 'suggestion-chip';
-  btn.textContent = s;
-  btn.addEventListener('click', () => {
-    promptInput.value = s;
-    generateAnimation();
-  });
-  suggestionsEl.appendChild(btn);
-});
-
-// ─── Targets — clickable selectors that exist in the canvas ──────────────────
+// ─── Targets — numbered, named, GSAP-aligned vocabulary ─────────────────────
+//
+// Each chip teaches the GSAP "target" abstraction. Hovering highlights the
+// element(s) on the canvas. Clicking inserts "Target N" into the prompt
+// (the AI server knows the mapping back to the actual selector).
 
 const TARGETS = [
-  { sel: '#heading',  label: '#heading'  },
-  { sel: '#subtext',  label: '#subtext'  },
-  { sel: '#card',     label: '#card'     },
-  { sel: '.card-bar', label: '.card-bar' },
-  { sel: '#boxes',    label: '#boxes'    },
-  { sel: '.box',      label: '.box'      },
-  { sel: '#box1',     label: '#box1'     },
-  { sel: '#box2',     label: '#box2'     },
-  { sel: '#box3',     label: '#box3'     },
-  { sel: '#circle',   label: '#circle'   },
+  { n: 1, label: 'Heading',       sel: '#heading',   count: 1, hint: 'Big "Jankless" title' },
+  { n: 2, label: 'Tagline',       sel: '#subtext',   count: 1, hint: 'Subtitle below the heading' },
+  { n: 3, label: 'KPI Card',      sel: '#card',      count: 1, hint: 'Monthly Revenue dashboard card' },
+  { n: 4, label: 'Chart Bars',    sel: '.card-bar',  count: 7, hint: 'Seven bars inside the card chart' },
+  { n: 5, label: 'Feature Boxes', sel: '.box',       count: 3, hint: 'Three colored boxes' },
+  { n: 6, label: 'Hero Circle',   sel: '#circle',    count: 1, hint: 'Pink/orange gradient circle' },
 ];
 
 function renderTargets() {
@@ -205,11 +202,28 @@ function renderTargets() {
   TARGETS.forEach(t => {
     const chip = document.createElement('button');
     chip.className = 'target-chip';
-    chip.textContent = t.label;
-    chip.title = `Insert "${t.sel}" into your prompt`;
-    chip.addEventListener('click', () => insertIntoPrompt(t.sel));
+    chip.title = `${t.hint}\nMaps to ${t.sel}\nClick to insert "Target ${t.n}" into your prompt`;
+    chip.innerHTML =
+      `<span class="chip-num">${t.n}</span>` +
+      `<span class="chip-label">${t.label}</span>` +
+      (t.count > 1 ? `<span class="chip-count">×${t.count}</span>` : '');
+    chip.addEventListener('click', () => insertIntoPrompt(`Target ${t.n}`));
+    chip.addEventListener('mouseenter', () => sendHighlight(t.sel));
+    chip.addEventListener('mouseleave', () => sendHighlight(null));
+    chip.addEventListener('focus',      () => sendHighlight(t.sel));
+    chip.addEventListener('blur',       () => sendHighlight(null));
     targetsEl.appendChild(chip);
   });
+}
+
+function sendHighlight(sel) {
+  try {
+    if (sel) {
+      canvasFrame.contentWindow.postMessage({ type: 'HIGHLIGHT_TARGET', selector: sel }, '*');
+    } else {
+      canvasFrame.contentWindow.postMessage({ type: 'UNHIGHLIGHT_TARGET' }, '*');
+    }
+  } catch (_) {}
 }
 
 function insertIntoPrompt(text) {
@@ -217,7 +231,6 @@ function insertIntoPrompt(text) {
   const end   = promptInput.selectionEnd;
   const before = promptInput.value.slice(0, start);
   const after  = promptInput.value.slice(end);
-  // Add a space if we're glued to existing non-space text
   const pad = before && !/\s$/.test(before) ? ' ' : '';
   const insert = pad + text + ' ';
   promptInput.value = before + insert + after;
@@ -228,14 +241,37 @@ function insertIntoPrompt(text) {
 
 renderTargets();
 
-// ─── Panel tabs (Quick starts / History) ─────────────────────────────────────
+// ─── Preset rendering ────────────────────────────────────────────────────────
+
+function renderPresets(containerId, presets) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  presets.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'suggestion-chip';
+    btn.textContent = s;
+    btn.addEventListener('click', () => {
+      promptInput.value = s;
+      generateAnimation();
+    });
+    el.appendChild(btn);
+  });
+}
+
+renderPresets('learn-list',   LEARN_PRESETS);
+renderPresets('recipes-list', RECIPE_PRESETS);
+
+// ─── Panel tabs (Learn / Recipes / History) ──────────────────────────────────
+
+const PANE_IDS = ['learn-section', 'recipes-section', 'history-section'];
 
 panelTabs.forEach(tab => {
   tab.addEventListener('click', () => {
     const target = tab.dataset.pane;
     panelTabs.forEach(t => t.classList.toggle('active', t === tab));
-    document.getElementById('quickstarts-section').hidden = (target !== 'quickstarts-section');
-    document.getElementById('history-section').hidden    = (target !== 'history-section');
+    PANE_IDS.forEach(id => {
+      document.getElementById(id).hidden = (id !== target);
+    });
     if (target === 'history-section') refreshHistory();
   });
 });
